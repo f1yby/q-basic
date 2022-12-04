@@ -141,7 +141,7 @@ void Tokenizer::align_begin() { begin_ = current_; }
 Str Tokenizer::get_word() {
   auto begin = begin_;
   align_begin();
-  return source_.substr(begin, current_ - begin_);
+  return source_.substr(begin, current_ - begin);
 }
 
 }  // namespace tokenizer
