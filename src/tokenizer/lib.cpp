@@ -118,8 +118,10 @@ void Tokenizer::lex_star() {
   if (peek() == '*') {
     eat();
     words_.emplace_back(std::make_shared<token::Power>());
+    align_begin();
   } else {
     words_.emplace_back(std::make_shared<token::Multiply>());
+    align_begin();
   }
 }
 
