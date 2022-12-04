@@ -23,6 +23,9 @@ SCENARIO("tokenizer can lex single character tokens") {
     WHEN("=") { REQUIRE(lex_result_into_string(tokenizer.lex("=")) == "="); }
     WHEN("(") { REQUIRE(lex_result_into_string(tokenizer.lex("(")) == "("); }
     WHEN(")") { REQUIRE(lex_result_into_string(tokenizer.lex(")")) == ")"); }
+    WHEN("invalid characters") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("[];")) == "[];");
+    }
   }
   GIVEN("Parentheses") {
     WHEN("(())") {

@@ -107,6 +107,9 @@ void Tokenizer::lex_normal() {
       align_begin();
       continue;
     }
+
+    words_.emplace_back(std::make_shared<token::Invalid>(eat()));
+    align_begin();
   }
 }
 

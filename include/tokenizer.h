@@ -203,13 +203,13 @@ class EoL : public Token {
 class Invalid : public Token {
  public:
   void dump(std::ostream &ostream) const override {
-    ostream << "INVALID LINE: " << code_;
+    ostream << letter_;
   }
 
-  explicit Invalid(Str code) : code_(std::move(code)) {}
+  explicit Invalid(char letter) : letter_(letter) {}
 
  private:
-  Str code_;
+  char letter_;
 };
 }  // namespace token
 
