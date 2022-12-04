@@ -35,8 +35,7 @@ void Tokenizer::lex_normal() {
     char c = static_cast<char>(peek());
 
     if (is_digit(c)) {
-      // TODO
-      //      lex_number();
+      lex_number();
       continue;
     }
 
@@ -144,6 +143,13 @@ Str Tokenizer::get_word() {
   auto begin = begin_;
   align_begin();
   return source_.substr(begin, current_ - begin);
+}
+void Tokenizer::lex_number() {
+  while (peek() != -1 && is_digit(static_cast<char>(peek()))) {
+    eat();
+  }
+  auto word = get_word();
+  words_.push_back(std::make_shared<token::Number>(std::stoll(word)));
 }
 
 }  // namespace tokenizer

@@ -22,6 +22,8 @@ class Number : public Token {
 
   void dump(std::ostream &ostream) const override { ostream << value_; }
 
+  explicit Number(int64_t value) : value_(value) {}
+
  private:
   int64_t value_;
 };
@@ -239,7 +241,6 @@ class Tokenizer {
 
   void lex_normal();
   void lex_rem();
-
 
   void lex_star();
   void lex_number();
