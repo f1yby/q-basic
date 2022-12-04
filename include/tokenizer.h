@@ -36,6 +36,8 @@ class Variant : public Token {
 
   void dump(std::ostream &ostream) const override { ostream << value_; }
 
+  explicit Variant(Str value) : value_(std::move(value)) {}
+
  private:
   Str value_;
 };

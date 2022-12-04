@@ -40,8 +40,7 @@ void Tokenizer::lex_normal() {
     }
 
     if (is_letter(c)) {
-      // TODO
-      //      lex_word();
+      lex_word();
       continue;
     }
 
@@ -123,6 +122,13 @@ void Tokenizer::lex_star() {
     align_begin();
   }
 }
+void Tokenizer::lex_number() {
+  while (peek() != -1 && is_digit(static_cast<char>(peek()))) {
+    eat();
+  }
+  auto word = get_word();
+  words_.push_back(std::make_shared<token::Number>(std::stoll(word)));
+}
 
 int32_t Tokenizer::peek() const {
   if (current_ < source_.size()) {
@@ -144,12 +150,79 @@ Str Tokenizer::get_word() {
   align_begin();
   return source_.substr(begin, current_ - begin);
 }
-void Tokenizer::lex_number() {
-  while (peek() != -1 && is_digit(static_cast<char>(peek()))) {
+void Tokenizer::lex_word() {
+  while (peek() != -1 && (is_digit(static_cast<char>(peek())) ||
+                          is_letter(static_cast<char>(peek())))) {
     eat();
   }
   auto word = get_word();
-  words_.push_back(std::make_shared<token::Number>(std::stoll(word)));
+  align_begin();
+
+  // Keyword
+
+  if (word == "REM") {
+    words_.emplace_back(std::make_shared<token::Rem>());
+    return;
+  }
+  if (word == "LET") {
+    words_.emplace_back(std::make_shared<token::Let>());
+    return;
+  }
+  if (word == "PRINT") {
+    words_.emplace_back(std::make_shared<token::Print>());
+    return;
+  }
+  if (word == "INPUT") {
+    words_.emplace_back(std::make_shared<token::Input>());
+    return;
+  }
+  if (word == "GOTO") {
+    words_.emplace_back(std::make_shared<token::Goto>());
+    return;
+  }
+  if (word == "IF") {
+    words_.emplace_back(std::make_shared<token::If>());
+    return;
+  }
+  if (word == "THEN") {
+    words_.emplace_back(std::make_shared<token::Then>());
+    return;
+  }
+  if (word == "END") {
+    words_.emplace_back(std::make_shared<token::End>());
+    return;
+  }
+
+  // Command
+
+  if (word == "RUN") {
+    words_.emplace_back(std::make_shared<token::Run>());
+    return;
+  }
+  if (word == "LOAD") {
+    words_.emplace_back(std::make_shared<token::Load>());
+    return;
+  }
+  if (word == "LIST") {
+    words_.emplace_back(std::make_shared<token::List>());
+    return;
+  }
+  if (word == "CLEAR") {
+    words_.emplace_back(std::make_shared<token::Clear>());
+    return;
+  }
+  if (word == "HELP") {
+    words_.emplace_back(std::make_shared<token::Help>());
+    return;
+  }
+  if (word == "QUIT") {
+    words_.emplace_back(std::make_shared<token::Quit>());
+    return;
+  }
+
+  // Variant
+
+  words_.emplace_back(std::make_shared<token::Variant>(word));
 }
 
 }  // namespace tokenizer
