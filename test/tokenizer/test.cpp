@@ -7,9 +7,7 @@ Str lex_result_into_string(const Vec<Rc<tokenizer::Token>>& tokens) {
   for (const auto& token : tokens) {
     token->dump(ss);
   }
-  Str s;
-  ss >> s;
-  return s;
+  return ss.str();
 }
 }  // namespace
 
@@ -119,6 +117,20 @@ SCENARIO("tokenizer can lex key words (except for REM)") {
     WHEN("IF 1 THEN 30") {
       REQUIRE(lex_result_into_string(tokenizer.lex("IF 1 THEN 30")) ==
               "IF1THEN30");
+    }
+  }
+}
+SCENARIO("tokenizer can lex REM") {
+  auto tokenizer = tokenizer::Tokenizer();
+  GIVEN("simple REM") {
+    WHEN("REM hello world") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("REM hello world")) ==
+              "REMhello world");
+    }
+    WHEN("100 REM Program to print the Fibonacci sequence") {
+      REQUIRE(lex_result_into_string(tokenizer.lex(
+                  "100 REM Program to print the Fibonacci sequence")) ==
+              "100REMProgram to print the Fibonacci sequence");
     }
   }
 }

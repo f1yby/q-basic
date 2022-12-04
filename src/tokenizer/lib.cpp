@@ -21,8 +21,7 @@ Vec<Rc<Token>> Tokenizer::lex(const Str &source) {
         lex_normal();
       } break;
       case Status::Rem: {
-        // TODO
-        //        lex_rem();
+        lex_rem();
       } break;
     }
   }
@@ -126,8 +125,7 @@ void Tokenizer::lex_number() {
   while (peek() != -1 && is_digit(static_cast<char>(peek()))) {
     eat();
   }
-  auto word = get_word();
-  words_.push_back(std::make_shared<token::Number>(std::stoll(word)));
+  words_.push_back(std::make_shared<token::Number>(std::stoll(get_word())));
 }
 
 int32_t Tokenizer::peek() const {
@@ -156,12 +154,12 @@ void Tokenizer::lex_word() {
     eat();
   }
   auto word = get_word();
-  align_begin();
 
   // Keyword
 
   if (word == "REM") {
     words_.emplace_back(std::make_shared<token::Rem>());
+    status_ = Status::Rem;
     return;
   }
   if (word == "LET") {
@@ -222,7 +220,17 @@ void Tokenizer::lex_word() {
 
   // Variant
 
-  words_.emplace_back(std::make_shared<token::Variant>(word));
+  words_.emplace_back(std::make_shared<token::Variant>(std::move(word)));
+}
+void Tokenizer::lex_rem() {
+  while (is_whitespace(static_cast<char>(peek()))) {
+    eat();
+  }
+  align_begin();
+  while (peek() != -1) {
+    eat();
+  }
+  words_.emplace_back(std::make_shared<token::RemString>(get_word()));
 }
 
 }  // namespace tokenizer
