@@ -3,3 +3,8 @@ add_library(
         STATIC
         lib.cpp
 )
+
+target_link_libraries(
+        engine_mini_basic
+        tokenizer
+)
