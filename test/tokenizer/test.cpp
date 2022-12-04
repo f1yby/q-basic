@@ -16,22 +16,41 @@ Str lex_result_into_string(const Vec<Rc<tokenizer::Token>>& tokens) {
 SCENARIO("tokenizer can lex single character tokens") {
   auto tokenizer = tokenizer::Tokenizer();
   auto ans = tokenizer::Tokenizer();
-  GIVEN("letter +") {
-    REQUIRE(lex_result_into_string(tokenizer.lex("+")) == Str("+"));
+  GIVEN("single letter word") {
+    WHEN("+") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("+")) == Str("+"));
+    }
+    WHEN("-") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("-")) == Str("-"));
+    }
+    WHEN("*") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("*")) == Str("*"));
+    }
+    WHEN("/") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("/")) == Str("/"));
+    }
+    WHEN("(") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("(")) == Str("("));
+    }
+    WHEN(")") {
+      REQUIRE(lex_result_into_string(tokenizer.lex(")")) == Str(")"));
+    }
   }
-  GIVEN("letter -") {
-    REQUIRE(lex_result_into_string(tokenizer.lex("-")) == Str("-"));
+  GIVEN("Parentheses") {
+    WHEN("(())") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("(())")) == Str("(())"));
+    }
+    WHEN("(()())") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("(()())")) == Str("(()())"));
+    }
   }
-  //  GIVEN("letter *") {
-  //    REQUIRE(lex_result_into_string(tokenizer.lex("*")) == Str("*"));
-  //  }
-  GIVEN("letter /") {
-    REQUIRE(lex_result_into_string(tokenizer.lex("/")) == Str("/"));
-  }
-  GIVEN("letter (") {
-    REQUIRE(lex_result_into_string(tokenizer.lex("(")) == Str("("));
-  }
-  GIVEN("letter )") {
-    REQUIRE(lex_result_into_string(tokenizer.lex(")")) == Str(")"));
+
+  GIVEN("word with space") {
+    WHEN("* *") {
+      REQUIRE(lex_result_into_string(tokenizer.lex("* *")) == Str("**"));
+    }
+    WHEN("* ("){
+      REQUIRE(lex_result_into_string(tokenizer.lex("* (")) == Str("*("));
+    }
   }
 }

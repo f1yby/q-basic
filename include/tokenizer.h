@@ -231,15 +231,19 @@ class Tokenizer {
 
   Status status_;
 
-  [[nodiscard]] char peek() const;
+  [[nodiscard]] int32_t peek() const;
   char eat();
+
+  void align_begin();
   Str get_word();
 
   void lex_normal();
   void lex_rem();
+
+
+  void lex_star();
   void lex_number();
   void lex_word();
-  void lex_star();
 };
 
 }  // namespace tokenizer
