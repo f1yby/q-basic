@@ -1,0 +1,11 @@
+add_executable(
+        test_parser
+        test.cpp
+)
+target_link_libraries(
+        test_parser
+        Catch2::Catch2WithMain
+        parser
+        tokenizer
+)
+catch_discover_tests(test_parser)
