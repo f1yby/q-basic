@@ -1,8 +1,17 @@
 #include "engine.h"
 namespace engine {
 void MiniBasic::generate_ast() {
-  // FIXME
-  ast = source;
+  ast.clear();
+  auto parser = parser::Parser();
+  auto tokenizer = tokenizer::Tokenizer();
+  for (const auto& line : source) {
+    auto node = parser.parse(tokenizer.lex(line));
+    if (typeid(*node) == typeid(parser::ast_node::LineNoStmt)) {
+      auto l = std::static_pointer_cast<parser::ast_node::LineNoStmt>(node);
+
+      ast.insert(std::make_pair(l->number()->value(), node));
+    }
+  }
 }
 void MiniBasic::run_code() { result = "todo"; }
 void MiniBasic::clear() {

@@ -7,4 +7,5 @@ add_library(
 target_link_libraries(
         engine_mini_basic
         tokenizer
+        parser
 )

@@ -101,6 +101,8 @@ class LineNoStmt : public AstNode {
     stmt_->dump(indent + 1, ostream);
   }
 
+  [[nodiscard]] Rc<tokenizer::token::Integer> number() const { return number_; }
+
   LineNoStmt(const Rc<AstNode>& token, const Rc<AstNode>& stmt_)
       : number_(std::static_pointer_cast<tokenizer::token::Integer>(
             std::static_pointer_cast<ast_node::Token>(token)->token())),
