@@ -11,7 +11,7 @@ Str lex_result_into_string(const Vec<Rc<tokenizer::Token>>& tokens) {
 }
 }  // namespace
 
-SCENARIO("tokenizer can lex single character tokens") {
+SCENARIO("tokenizer can lex single character tokens", "[tokenizer]") {
   auto tokenizer = tokenizer::Tokenizer();
   GIVEN("single letter word") {
     WHEN("+") { REQUIRE(lex_result_into_string(tokenizer.lex("+")) == "+"); }
@@ -48,7 +48,7 @@ SCENARIO("tokenizer can lex single character tokens") {
   }
 }
 
-SCENARIO("tokenizer can lex number expressions") {
+SCENARIO("tokenizer can lex number expressions", "[tokenizer]") {
   auto tokenizer = tokenizer::Tokenizer();
   GIVEN("single number") {
     WHEN("0") { REQUIRE(lex_result_into_string(tokenizer.lex("0\n")) == "0"); }
@@ -89,7 +89,7 @@ SCENARIO("tokenizer can lex number expressions") {
   }
 }
 
-SCENARIO("tokenizer can lex key words (except for REM)") {
+SCENARIO("tokenizer can lex key words (except for REM)", "[tokenizer]") {
   auto tokenizer = tokenizer::Tokenizer();
   GIVEN("single keyword") {
     WHEN("LET") {
@@ -142,7 +142,7 @@ SCENARIO("tokenizer can lex key words (except for REM)") {
     }
   }
 }
-SCENARIO("tokenizer can lex REM") {
+SCENARIO("tokenizer can lex REM", "[tokenizer]") {
   auto tokenizer = tokenizer::Tokenizer();
   GIVEN("simple REM") {
     WHEN("REM hello world") {

@@ -26,6 +26,7 @@ Vec<Rc<Token>> Tokenizer::lex(const Str &source) {
     }
   }
 
+  words_.emplace_back(std::make_shared<token::EoL>());
   return std::move(words_);
 }
 
@@ -34,7 +35,7 @@ void Tokenizer::lex_normal() {
     char c = static_cast<char>(peek());
 
     if (is_digit(c)) {
-      lex_number();
+      lex_integer();
       continue;
     }
 
@@ -124,11 +125,11 @@ void Tokenizer::lex_star() {
     align_begin();
   }
 }
-void Tokenizer::lex_number() {
+void Tokenizer::lex_integer() {
   while (peek() != -1 && is_digit(static_cast<char>(peek()))) {
     eat();
   }
-  words_.push_back(std::make_shared<token::Number>(std::stoll(get_word())));
+  words_.push_back(std::make_shared<token::Integer>(std::stoll(get_word())));
 }
 
 int32_t Tokenizer::peek() const {

@@ -16,13 +16,13 @@ namespace token {
 
 // Numbers
 
-class Number : public Token {
+class Integer : public Token {
  public:
   [[nodiscard]] int64_t value() const { return value_; }
 
   void dump(std::ostream &ostream) const override { ostream << value_; }
 
-  explicit Number(int64_t value) : value_(value) {}
+  explicit Integer(int64_t value) : value_(value) {}
 
  private:
   int64_t value_;
@@ -236,7 +236,7 @@ class Tokenizer {
   void lex_rem();
 
   void lex_star();
-  void lex_number();
+  void lex_integer();
   void lex_word();
 };
 
