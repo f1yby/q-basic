@@ -41,7 +41,9 @@ SCENARIO("tokenizer can lex single character tokens") {
       REQUIRE(lex_result_into_string(tokenizer.lex("* *\n")) == "**");
     }
     WHEN("* (") {
-      REQUIRE(lex_result_into_string(tokenizer.lex("* (\n")) == "*(");
+      REQUIRE(lex_result_into_string(tokenizer.lex("* (\n")) ==
+              "*"
+              "(");
     }
   }
 }
@@ -60,15 +62,29 @@ SCENARIO("tokenizer can lex number expressions") {
   GIVEN("expression") {
     WHEN("123**456") {
       REQUIRE(lex_result_into_string(tokenizer.lex("123**456\n")) ==
-              "123**456");
+              "123"
+              "**"
+              "456");
     }
     WHEN("12+34*56") {
       REQUIRE(lex_result_into_string(tokenizer.lex("12 + 34 * 56\n")) ==
-              "12+34*56");
+              "12"
+              "+"
+              "34"
+              "*"
+              "56");
     }
     WHEN("12/3**(4+56)") {
       REQUIRE(lex_result_into_string(tokenizer.lex("12/3**(4+56)\n")) ==
-              "12/3**(4+56)");
+              "12"
+              "/"
+              "3"
+              "**"
+              "("
+              "4"
+              "+"
+              "56"
+              ")");
     }
   }
 }
@@ -119,7 +135,10 @@ SCENARIO("tokenizer can lex key words (except for REM)") {
   GIVEN("combination fo keywords") {
     WHEN("IF 1 THEN 30") {
       REQUIRE(lex_result_into_string(tokenizer.lex("IF 1 THEN 30")) ==
-              "IF1THEN30");
+              "IF"
+              "1"
+              "THEN"
+              "30");
     }
   }
 }
@@ -128,12 +147,15 @@ SCENARIO("tokenizer can lex REM") {
   GIVEN("simple REM") {
     WHEN("REM hello world") {
       REQUIRE(lex_result_into_string(tokenizer.lex("REM hello world")) ==
-              "REMhello world");
+              "REM"
+              "hello world");
     }
     WHEN("100 REM Program to print the Fibonacci sequence") {
       REQUIRE(lex_result_into_string(tokenizer.lex(
                   "100 REM Program to print the Fibonacci sequence")) ==
-              "100REMProgram to print the Fibonacci sequence");
+              "100"
+              "REM"
+              "Program to print the Fibonacci sequence");
     }
   }
 }
