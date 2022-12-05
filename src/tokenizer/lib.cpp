@@ -235,6 +235,7 @@ void Tokenizer::lex_rem() {
     eat();
   }
   words_.emplace_back(std::make_shared<token::RemString>(get_word()));
+  status_ = Status::Normal;
 }
 
 }  // namespace tokenizer
