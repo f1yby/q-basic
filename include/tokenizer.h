@@ -184,27 +184,18 @@ class Quit : public Token {
   void dump(std::ostream &ostream) const override { ostream << "QUIT"; }
 };
 
-// Space
-
-class Space : public Token {
- public:
-  void dump(std::ostream &ostream) const override {}
-};
-
 // End of line
 
 class EoL : public Token {
  public:
-  void dump(std::ostream &ostream) const override { ostream << '\n'; }
+  void dump(std::ostream &ostream) const override {}
 };
 
 // Invalid Token (for error handling)
 
 class Invalid : public Token {
  public:
-  void dump(std::ostream &ostream) const override {
-    ostream << letter_;
-  }
+  void dump(std::ostream &ostream) const override { ostream << letter_; }
 
   explicit Invalid(char letter) : letter_(letter) {}
 
