@@ -60,5 +60,37 @@ void MiniBasic::start_run() {
     pc_ = -1;
   }
 }
+UIBehavior MiniBasic::handle_command(const Str& command) {
+  auto node = parser::Parser().parse(tokenizer::Tokenizer().lex(command));
+  if (typeid(*node) == typeid(parser::ast_node::LineNoStmt)) {
+    auto l = std::static_pointer_cast<parser::ast_node::LineNoStmt>(node);
+    auto a = ast.find(l->number()->value());
+    if (a != ast.end()) {
+      a->second = l;
+    } else {
+      ast.insert(std::make_pair(l->number()->value(), l));
+    }
+    auto s = source.find(l->number()->value());
+    if (s != source.end()) {
+      s->second = command;
+    } else {
+      source.insert(std::make_pair(l->number()->value(), command));
+    }
+    return UIBehavior::Refresh;
+  } else if (typeid(*node) == typeid(parser::ast_node::Run)) {
+    return UIBehavior::Run;
+  } else if (typeid(*node) == typeid(parser::ast_node::Load)) {
+    return UIBehavior::Load;
+  } else if (typeid(*node) == typeid(parser::ast_node::List)) {
+    return UIBehavior::List;
+  } else if (typeid(*node) == typeid(parser::ast_node::Clear)) {
+    return UIBehavior::Clear;
+  } else if (typeid(*node) == typeid(parser::ast_node::Help)) {
+    return UIBehavior::Help;
+  } else if (typeid(*node) == typeid(parser::ast_node::Quit)) {
+    return UIBehavior::Quit;
+  }
+  return UIBehavior::None;
+}
 
 }  // namespace engine
