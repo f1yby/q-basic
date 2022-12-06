@@ -1,9 +1,12 @@
 #pragma once
+#include <cmath>
 #include <stack>
 #include <utility>
 
+#include "engine.h"
 #include "tokenizer.h"
 #include "type.h"
+#include "ui_behavior.h"
 
 namespace {
 inline void dump_indent(uint32_t indent, std::ostream& ostream) {
@@ -36,6 +39,9 @@ namespace ast_node {
 class Stmt : public AstNode {
  public:
   void dump(uint32_t indent, std::ostream& ostream) const override = 0;
+  virtual UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc,
+                         Str& output, Str& variant_need_input) = 0;
+
   ~Stmt() override = default;
 };
 
@@ -50,6 +56,9 @@ class Command : public AstNode {
 class Expr : public AstNode {
  public:
   void dump(uint32_t indent, std::ostream& ostream) const override = 0;
+
+  virtual int64_t evaluate(Map<Str, int64_t>& variants, Str& output) = 0;
+
   ~Expr() override = default;
 };
 
@@ -103,6 +112,11 @@ class LineNoStmt : public AstNode {
 
   [[nodiscard]] Rc<tokenizer::token::Integer> number() const { return number_; }
 
+  UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc, Str& output,
+                 Str& variant_need_input) {
+    return stmt_->run(variants, next_pc, output, variant_need_input);
+  }
+
   LineNoStmt(const Rc<AstNode>& token, const Rc<AstNode>& stmt_)
       : number_(std::static_pointer_cast<tokenizer::token::Integer>(
             std::static_pointer_cast<ast_node::Token>(token)->token())),
@@ -119,6 +133,11 @@ class Rem : public Stmt {
   void dump(uint32_t indent, std::ostream& ostream) const override {
     dump_token(indent, rem_, ostream);
     dump_token(indent + 1, rem_string_, ostream);
+  }
+
+  UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc, Str& output,
+                 Str& variant_need_input) override {
+    return UIBehavior::None;
   }
 
   Rem(const Rc<AstNode>& rem, const Rc<AstNode>& rem_string)
@@ -140,6 +159,15 @@ class Let : public Stmt {
     dump_token(indent + 1, equal_, ostream);
     dump_token(indent + 2, variant_, ostream);
     expr_->dump(indent + 2, ostream);
+  }
+  UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc, Str& output,
+                 Str& variant_need_input) override {
+    auto value = expr_->evaluate(variants, output);
+    if (variants.count(variant_->value())) {
+      variants.erase(variant_->value());
+    }
+    variants.insert(std::make_pair(variant_->value(), value));
+    return UIBehavior::None;
   }
 
   Let(const Rc<AstNode>& let, const Rc<AstNode>& variant,
@@ -166,6 +194,13 @@ class Print : public Stmt {
     dump_token(indent, print_, ostream);
     expr_->dump(indent + 1, ostream);
   }
+  UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc, Str& output,
+                 Str& variant_need_input) override {
+    auto o = std::to_string(expr_->evaluate(variants, output));
+    output.insert(output.end(), o.begin(), o.end());
+    return UIBehavior::Refresh;
+  }
+
   Print(const Rc<AstNode>& print, const Rc<AstNode>& expr)
       : print_(std::static_pointer_cast<tokenizer::token::Print>(
             std::static_pointer_cast<Token>(print)->token())),
@@ -184,6 +219,11 @@ class Input : public Stmt {
     dump_token(indent + 1, variant_, ostream);
   }
 
+  UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc, Str& output,
+                 Str& variant_need_input) override {
+    variant_need_input = variant_->value();
+    return UIBehavior::Input;
+  }
   Input(const Rc<AstNode>& input, const Rc<AstNode>& variant)
       : input_(std::static_pointer_cast<tokenizer::token::Input>(
             std::static_pointer_cast<Token>(input)->token())),
@@ -203,6 +243,11 @@ class Goto : public Stmt {
     dump_token(indent + 1, number_, ostream);
   }
 
+  UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc, Str& output,
+                 Str& variant_need_input) override {
+    next_pc = number_->value();
+    return UIBehavior::None;
+  }
   Goto(const Rc<AstNode>& go_to, const Rc<AstNode>& number)
       : goto_(std::static_pointer_cast<tokenizer::token::Goto>(
             std::static_pointer_cast<Token>(go_to)->token())),
@@ -222,6 +267,14 @@ class If : public Stmt {
     expr_->dump(indent + 1, ostream);
     dump_token(indent, then_, ostream);
     dump_token(indent + 1, number_, ostream);
+  }
+
+  UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc, Str& output,
+                 Str& variant_need_input) override {
+    if (expr_->evaluate(variants, output) != 0) {
+      next_pc = number_->value();
+    }
+    return UIBehavior::None;
   }
 
   If(const Rc<AstNode>& _if, const Rc<AstNode>& expr, const Rc<AstNode>& then,
@@ -249,6 +302,10 @@ class End : public Stmt {
     end_->dump(ostream);
     dump_end_line(ostream);
   }
+  UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc, Str& output,
+                 Str& variant_need_input) override {
+    return UIBehavior::FinishRun;
+  }
 
   explicit End(const Rc<AstNode>& end)
       : end_(std::static_pointer_cast<tokenizer::token::End>(
@@ -265,6 +322,16 @@ class VariantExpr : public Expr {
   void dump(uint32_t indent, std::ostream& ostream) const override {
     dump_token(indent, variant_, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    if (variants.count(variant_->value()) == 0) {
+      auto warn = Str("WARNING: Unknown variable " + variant_->value());
+      output.insert(output.end(), warn.begin(), warn.end());
+      return 0;
+    } else {
+      return variants[variant_->value()];
+    }
+  }
+
   explicit VariantExpr(const Rc<AstNode>& variant)
       : variant_(std::static_pointer_cast<tokenizer::token::Variant>(
             std::static_pointer_cast<Token>(variant)->token())) {}
@@ -277,6 +344,10 @@ class IntegerExpr : public Expr {
   void dump(uint32_t indent, std::ostream& ostream) const override {
     dump_token(indent, integer_, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return integer_->value();
+  }
+
   explicit IntegerExpr(const Rc<AstNode>& variant)
       : integer_(std::static_pointer_cast<tokenizer::token::Integer>(
             std::static_pointer_cast<Token>(variant)->token())) {}
@@ -291,6 +362,10 @@ class NegExpr : public Expr {
     dump_token(indent, neg_, ostream);
     expr_->dump(indent + 1, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return -expr_->evaluate(variants, output);
+  }
+
   NegExpr(const Rc<AstNode>& neg, const Rc<AstNode>& expr)
       : neg_(std::static_pointer_cast<tokenizer::token::Minus>(
             std::static_pointer_cast<Token>(neg)->token())),
@@ -306,6 +381,10 @@ class PosExpr : public Expr {
     dump_token(indent, positive_, ostream);
     expr_->dump(indent + 1, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return expr_->evaluate(variants, output);
+  }
+
   PosExpr(const Rc<AstNode>& positive, const Rc<AstNode>& expr)
       : positive_(std::static_pointer_cast<tokenizer::token::Plus>(
             std::static_pointer_cast<Token>(positive)->token())),
@@ -323,6 +402,11 @@ class GreaterExpr : public Expr {
     left_->dump(indent + 1, ostream);
     right_->dump(indent + 1, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return left_->evaluate(variants, output) >
+           right_->evaluate(variants, output);
+  }
+
   GreaterExpr(const Rc<AstNode>& left, const Rc<AstNode>& op,
               const Rc<AstNode>& right)
       : left_(std::static_pointer_cast<Expr>(left)),
@@ -342,6 +426,11 @@ class EqualExpr : public Expr {
     left_->dump(indent + 1, ostream);
     right_->dump(indent + 1, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return left_->evaluate(variants, output) ==
+           right_->evaluate(variants, output);
+  }
+
   EqualExpr(const Rc<AstNode>& left, const Rc<AstNode>& op,
             const Rc<AstNode>& right)
       : left_(std::static_pointer_cast<Expr>(left)),
@@ -361,6 +450,11 @@ class LessExpr : public Expr {
     left_->dump(indent + 1, ostream);
     right_->dump(indent + 1, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return left_->evaluate(variants, output) <
+           right_->evaluate(variants, output);
+  }
+
   LessExpr(const Rc<AstNode>& left, const Rc<AstNode>& op,
            const Rc<AstNode>& right)
       : left_(std::static_pointer_cast<Expr>(left)),
@@ -381,6 +475,11 @@ class PlusExpr : public Expr {
     left_->dump(indent + 1, ostream);
     right_->dump(indent + 1, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return left_->evaluate(variants, output) +
+           right_->evaluate(variants, output);
+  }
+
   PlusExpr(const Rc<AstNode>& left, const Rc<AstNode>& op,
            const Rc<AstNode>& right)
       : left_(std::static_pointer_cast<Expr>(left)),
@@ -400,6 +499,11 @@ class MinusExpr : public Expr {
     left_->dump(indent + 1, ostream);
     right_->dump(indent + 1, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return left_->evaluate(variants, output) -
+           right_->evaluate(variants, output);
+  }
+
   MinusExpr(const Rc<AstNode>& left, const Rc<AstNode>& op,
             const Rc<AstNode>& right)
       : left_(std::static_pointer_cast<Expr>(left)),
@@ -420,6 +524,11 @@ class MultiplyExpr : public Expr {
     left_->dump(indent + 1, ostream);
     right_->dump(indent + 1, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return left_->evaluate(variants, output) *
+           right_->evaluate(variants, output);
+  }
+
   MultiplyExpr(const Rc<AstNode>& left, const Rc<AstNode>& op,
                const Rc<AstNode>& right)
       : left_(std::static_pointer_cast<Expr>(left)),
@@ -439,6 +548,11 @@ class DivideExpr : public Expr {
     left_->dump(indent + 1, ostream);
     right_->dump(indent + 1, ostream);
   }
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return left_->evaluate(variants, output) /
+           right_->evaluate(variants, output);
+  }
+
   DivideExpr(const Rc<AstNode>& left, const Rc<AstNode>& op,
              const Rc<AstNode>& right)
       : left_(std::static_pointer_cast<Expr>(left)),
@@ -459,6 +573,14 @@ class PowerExpr : public Expr {
     left_->dump(indent + 1, ostream);
     right_->dump(indent + 1, ostream);
   }
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
+  int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
+    return pow(left_->evaluate(variants, output),
+               right_->evaluate(variants, output));
+  }
+#pragma clang diagnostic pop
+
   PowerExpr(const Rc<AstNode>& left, const Rc<AstNode>& op,
             const Rc<AstNode>& right)
       : left_(std::static_pointer_cast<Expr>(left)),

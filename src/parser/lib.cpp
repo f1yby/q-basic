@@ -1,8 +1,8 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "misc-no-recursion"
-#include "parser.h"
-#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
+#include "parser.h"
+
 namespace parser {
 Rc<AstNode> Parser::parse(const Vec<Rc<tokenizer::Token>>& tokens) {
   for (const auto& token : tokens) {
@@ -750,5 +750,4 @@ void Parser::parse_power_expr() {
 
 }  // namespace parser
 
-#pragma clang diagnostic pop;
 #pragma clang diagnostic pop

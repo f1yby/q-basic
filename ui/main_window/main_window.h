@@ -1,13 +1,15 @@
 #pragma once
-#include"engine.h"
 #include <QMainWindow>
 
+#include "engine.h"
+
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui {
+class MainWindow;
+}
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
   Q_OBJECT
 
  public:
@@ -22,5 +24,17 @@ class MainWindow : public QMainWindow
 
  private:
   Ui::MainWindow *ui;
-  engine::MiniBasic* engine;
+  engine::MiniBasic *engine;
+
+  bool redirect_to_engine_;
+  Str input_for_engine_;
+
+
+  void run();
+  void load();
+  void list();
+  void clear();
+  void help();
+  void quit();
+  void refresh();
 };
