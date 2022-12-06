@@ -65,7 +65,15 @@ void Parser::parse_stmt() {
     parse_if();
   } else if (typeid(*tokens_[cursor_]) == typeid(tokenizer::token::End)) {
     parse_end();
-  } else {
+  } else if (typeid(*tokens_[cursor_]) == typeid(tokenizer::token::EoL)) {
+    shift();
+    get_and_pop();
+    auto lineno = get_and_pop();
+    stack_.push(std::make_shared<ast_node::ClearLine>(lineno));
+    return ;
+  } else
+
+  {
     error_msg_ =
         std::make_shared<ast_node::Invalid>("unexpected token in stmt");
     ok_ = false;
@@ -112,6 +120,16 @@ void Parser::parse_cmd() {
 
 void Parser::parse_rem() {
   shift();
+
+  if (typeid(*tokens_[cursor_]) == typeid(tokenizer::token::EoL)) {
+    shift();
+    get_and_pop();
+    auto rem = get_and_pop();
+    stack_.push(std::make_shared<ast_node::Rem>(
+        rem, std::make_shared<ast_node::Token>(
+                 std::make_shared<tokenizer::token::RemString>(""))));
+    return;
+  }
 
   if (typeid(*tokens_[cursor_]) != typeid(tokenizer::token::RemString)) {
     ok_ = false;
@@ -747,6 +765,7 @@ void Parser::parse_power_expr() {
     return;
   }
 }
+void Parser::parse_clear_line() { shift(); }
 
 }  // namespace parser
 

@@ -89,6 +89,11 @@ UIBehavior MiniBasic::handle_command(const Str& command) {
     return UIBehavior::Help;
   } else if (typeid(*node) == typeid(parser::ast_node::Quit)) {
     return UIBehavior::Quit;
+  } else if (typeid(*node) == typeid(parser::ast_node::ClearLine)) {
+    auto l = static_cast<parser::ast_node::ClearLine>(node).number()->value();
+    source.erase(l);
+    ast.erase(l);
+    return UIBehavior::Refresh;
   }
   return UIBehavior::None;
 }

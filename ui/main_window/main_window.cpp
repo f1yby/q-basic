@@ -21,6 +21,7 @@ MainWindow::~MainWindow() {
 void MainWindow::on_cmdLineEdit_editingFinished() {
   QString cmd = ui->cmdLineEdit->text();
   ui->cmdLineEdit->setText("");
+  ui->resultDisplay->append(QString::fromStdString("> " + cmd.toStdString()));
 
   if (redirect_to_engine_input_) {
     redirect_to_engine_input_ = !engine->handle_input(cmd.toStdString());
@@ -49,6 +50,7 @@ void MainWindow::on_cmdLineEdit_editingFinished() {
         break;
       case UIBehavior::Input:
         redirect_to_engine_input_ = true;
+        refresh();
         break;
       case UIBehavior::Refresh:
         refresh();
@@ -60,23 +62,30 @@ void MainWindow::on_cmdLineEdit_editingFinished() {
   }
 }
 
-void MainWindow::on_btnLoadCode_released() { load(); }
+void MainWindow::on_btnLoadCode_released() {
+  ui->resultDisplay->append(QString::fromStdString("> LOAD"));
+  load();
+}
 
-void MainWindow::on_btnRunCode_released() { run(); }
+void MainWindow::on_btnRunCode_released() {
+  ui->resultDisplay->append(QString::fromStdString("> RUN"));
+  run();
+}
 
-void MainWindow::on_btnClearCode_released() { clear(); }
+void MainWindow::on_btnClearCode_released() {
+  ui->resultDisplay->append(QString::fromStdString("> CLEAR"));
+  clear();
+}
 void MainWindow::refresh() {
   ui->CodeDisplay->setText(QString::fromStdString(engine->get_source_copy()));
   ui->treeDisplay->setText(QString::fromStdString(engine->get_ast_copy()));
   update();
 }
 void MainWindow::run() {
-  ui->resultDisplay->append(QString::fromStdString("> RUN"));
   engine->start_run();
   continue_run();
 }
 void MainWindow::load() {
-  ui->resultDisplay->append(QString::fromStdString("> LOAD"));
   QString filename = QFileDialog::getOpenFileName(
       nullptr, QObject::tr("Load Game"), QDir::currentPath(),
       QObject::tr("Basic Script File"));
@@ -92,20 +101,13 @@ void MainWindow::load() {
 
   refresh();
 }
-void MainWindow::list() {
-  ui->resultDisplay->append(QString::fromStdString("> LIST"));
-}
+void MainWindow::list() {}
 void MainWindow::clear() {
-  ui->resultDisplay->append(QString::fromStdString("> CLEAR"));
   engine->clear();
   refresh();
 }
-void MainWindow::help() {
-  ui->resultDisplay->append(QString::fromStdString("> HELP"));
-}
-void MainWindow::quit() {
-  ui->resultDisplay->append(QString::fromStdString("> QUIT"));
-}
+void MainWindow::help() {}
+void MainWindow::quit() {}
 void MainWindow::continue_run() {
   UIBehavior behavior;
   Str output;
@@ -113,7 +115,9 @@ void MainWindow::continue_run() {
     behavior = engine->step_run(output);
     switch (behavior) {
       case UIBehavior::Input:
+        ui->resultDisplay->append(QString::fromStdString(output));
         redirect_to_engine_input_ = true;
+        refresh();
         return;
       case UIBehavior::Refresh:
         ui->resultDisplay->append(QString::fromStdString(output));

@@ -26,9 +26,7 @@ class MainWindow : public QMainWindow {
   Ui::MainWindow *ui;
   engine::MiniBasic *engine;
 
-  bool redirect_to_engine_input_;
-  Str input_for_engine_;
-
+  bool redirect_to_engine_input_{false};
 
   void run();
   void continue_run();

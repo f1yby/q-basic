@@ -222,6 +222,8 @@ class Input : public Stmt {
   UIBehavior run(Map<Str, int64_t>& variants, int64_t& next_pc, Str& output,
                  Str& variant_need_input) override {
     variant_need_input = variant_->value();
+    auto i = Str("INPUT " + variant_->value());
+    output.insert(output.end(), i.begin(), i.end());
     return UIBehavior::Input;
   }
   Input(const Rc<AstNode>& input, const Rc<AstNode>& variant)
@@ -313,6 +315,23 @@ class End : public Stmt {
 
  private:
   Rc<tokenizer::Token> end_;
+};
+
+// Clear Line
+
+class ClearLine : public Command {
+ public:
+  void dump(uint32_t indent, std::ostream& ostream) const override {
+    dump_token(indent, number_, ostream);
+  }
+  explicit ClearLine(const Rc<AstNode>& number)
+      : number_(std::static_pointer_cast<tokenizer::token::Integer>(
+            std::static_pointer_cast<Token>(number)->token())) {}
+
+  [[nodiscard]] Rc<tokenizer::token::Integer> number() const { return number_; }
+
+ private:
+  Rc<tokenizer::token::Integer> number_;
 };
 
 // Expression
@@ -699,6 +718,7 @@ class Parser {
   void parse_goto();
   void parse_if();
   void parse_end();
+  void parse_clear_line();
 
   void parse_expr();
 
