@@ -8,7 +8,6 @@ enum class UIBehavior {
   Help,
   Quit,
   Input,
-  Refresh,
   FinishRun,
   None,
 };

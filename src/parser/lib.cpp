@@ -17,7 +17,12 @@ Rc<AstNode> Parser::parse(const Vec<Rc<tokenizer::Token>>& tokens) {
 
   if (typeid(*tokens_[cursor_]) == typeid(tokenizer::token::Integer)) {
     parse_stmt();
-
+  } else if (typeid(*tokens_[cursor_]) == typeid(tokenizer::token::Input)) {
+    parse_input();
+  } else if (typeid(*tokens_[cursor_]) == typeid(tokenizer::token::Print)) {
+    parse_print();
+  } else if (typeid(*tokens_[cursor_]) == typeid(tokenizer::token::Let)) {
+    parse_let();
   } else if (typeid(*tokens_[cursor_]) == typeid(tokenizer::token::Run) ||
              typeid(*tokens_[cursor_]) == typeid(tokenizer::token::Load) ||
              typeid(*tokens_[cursor_]) == typeid(tokenizer::token::List) ||
@@ -70,7 +75,7 @@ void Parser::parse_stmt() {
     get_and_pop();
     auto lineno = get_and_pop();
     stack_.push(std::make_shared<ast_node::ClearLine>(lineno));
-    return ;
+    return;
   } else
 
   {

@@ -29,7 +29,8 @@ void MainWindow::on_cmdLineEdit_editingFinished() {
       continue_run();
     }
   } else {
-    switch (engine->handle_command(cmd.toStdString())) {
+    Str output;
+    switch (engine->handle_command(cmd.toStdString(), output)) {
       case UIBehavior::Run:
         run();
         break;
@@ -50,14 +51,15 @@ void MainWindow::on_cmdLineEdit_editingFinished() {
         break;
       case UIBehavior::Input:
         redirect_to_engine_input_ = true;
-        refresh();
-        break;
-      case UIBehavior::Refresh:
-        refresh();
         break;
       case UIBehavior::FinishRun:
       case UIBehavior::None:
         break;
+    }
+    if (!output.empty()) {
+      ui->resultDisplay->append(QString::fromStdString(output));
+      output.clear();
+      refresh();
     }
   }
 }
@@ -82,7 +84,7 @@ void MainWindow::refresh() {
   update();
 }
 void MainWindow::run() {
-  engine->start_run();
+  engine->reset_pc();
   continue_run();
 }
 void MainWindow::load() {
@@ -113,27 +115,16 @@ void MainWindow::continue_run() {
   Str output;
   while (true) {
     behavior = engine->step_run(output);
-    switch (behavior) {
-      case UIBehavior::Input:
-        ui->resultDisplay->append(QString::fromStdString(output));
-        redirect_to_engine_input_ = true;
-        refresh();
-        return;
-      case UIBehavior::Refresh:
-        ui->resultDisplay->append(QString::fromStdString(output));
-        output.clear();
-        refresh();
-        break;
-      case UIBehavior::FinishRun:
-        return;
-      case UIBehavior::Run:
-      case UIBehavior::Load:
-      case UIBehavior::List:
-      case UIBehavior::Clear:
-      case UIBehavior::Help:
-      case UIBehavior::Quit:
-      case UIBehavior::None:
-        break;
+    if (behavior == UIBehavior::Input) {
+      redirect_to_engine_input_ = true;
+    }
+    if (!output.empty()) {
+      ui->resultDisplay->append(QString::fromStdString(output));
+      output.clear();
+      refresh();
+    }
+    if (behavior == UIBehavior::Input || behavior == UIBehavior::FinishRun) {
+      return;
     }
   }
 }

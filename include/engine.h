@@ -14,7 +14,7 @@ class MiniBasic {
  public:
   void load_source(std::istream& in);
 
-  UIBehavior handle_command(const Str& command);
+  UIBehavior handle_command(const Str& command, Str& output);
 
   void clear();
 
@@ -22,9 +22,8 @@ class MiniBasic {
     return string_lines_into_string(source);
   }
   [[nodiscard]] std::string get_ast_copy() const;
-  [[nodiscard]] std::string get_result_copy() const { return result; }
 
-  void start_run();
+  void reset_pc();
 
   UIBehavior step_run(Str& output);
   bool handle_input(const Str& input) {
@@ -54,7 +53,6 @@ class MiniBasic {
  private:
   Map<int64_t, Str> source;
   Map<int64_t, Rc<parser::ast_node::LineNoStmt>> ast;
-  Str result;
 
   // Runner
   int64_t pc_{-1};

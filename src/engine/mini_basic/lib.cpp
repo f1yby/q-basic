@@ -3,7 +3,9 @@ namespace engine {
 void MiniBasic::clear() {
   source.clear();
   ast.clear();
-  result.clear();
+
+  variant_env.clear();
+  variant_need_input_.clear();
 }
 Str MiniBasic::string_lines_into_string(const Map<int64_t, Str>& in) {
   auto out = std::string();
@@ -51,16 +53,7 @@ UIBehavior MiniBasic::step_run(Str& output) {
   }
   return stmt->second->run(variant_env, pc_, output, variant_need_input_);
 }
-void MiniBasic::start_run() {
-  variant_env.clear();
-  variant_need_input_.clear();
-  if (!ast.empty()) {
-    pc_ = ast.begin()->first;
-  } else {
-    pc_ = -1;
-  }
-}
-UIBehavior MiniBasic::handle_command(const Str& command) {
+UIBehavior MiniBasic::handle_command(const Str& command, Str& output) {
   auto node = parser::Parser().parse(tokenizer::Tokenizer().lex(command));
   if (typeid(*node) == typeid(parser::ast_node::LineNoStmt)) {
     auto l = std::static_pointer_cast<parser::ast_node::LineNoStmt>(node);
@@ -76,7 +69,16 @@ UIBehavior MiniBasic::handle_command(const Str& command) {
     } else {
       source.insert(std::make_pair(l->number()->value(), command));
     }
-    return UIBehavior::Refresh;
+    return UIBehavior::None;
+  }
+
+  else if (typeid(*node) == typeid(parser::ast_node::Input) ||
+           typeid(*node) == typeid(parser::ast_node::Print) ||
+           typeid(*node) == typeid(parser::ast_node::Let)) {
+    auto s = std::static_pointer_cast<parser::ast_node::Stmt>(node);
+    int64_t ignore;
+    return s->run(variant_env, ignore, output, variant_need_input_);
+
   } else if (typeid(*node) == typeid(parser::ast_node::Run)) {
     return UIBehavior::Run;
   } else if (typeid(*node) == typeid(parser::ast_node::Load)) {
@@ -93,9 +95,16 @@ UIBehavior MiniBasic::handle_command(const Str& command) {
     auto l = static_cast<parser::ast_node::ClearLine>(node).number()->value();
     source.erase(l);
     ast.erase(l);
-    return UIBehavior::Refresh;
+    return UIBehavior::None;
   }
   return UIBehavior::None;
+}
+void MiniBasic::reset_pc() {
+  if (!ast.empty()) {
+    pc_ = ast.begin()->first;
+  } else {
+    pc_ = -1;
+  }
 }
 
 }  // namespace engine

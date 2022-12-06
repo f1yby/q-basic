@@ -198,7 +198,7 @@ class Print : public Stmt {
                  Str& variant_need_input) override {
     auto o = std::to_string(expr_->evaluate(variants, output));
     output.insert(output.end(), o.begin(), o.end());
-    return UIBehavior::Refresh;
+    return UIBehavior::None;
   }
 
   Print(const Rc<AstNode>& print, const Rc<AstNode>& expr)
@@ -343,7 +343,7 @@ class VariantExpr : public Expr {
   }
   int64_t evaluate(Map<Str, int64_t>& variants, Str& output) override {
     if (variants.count(variant_->value()) == 0) {
-      auto warn = Str("WARNING: Unknown variable " + variant_->value());
+      auto warn = Str("WARNING: Unknown variable " + variant_->value()+"\n");
       output.insert(output.end(), warn.begin(), warn.end());
       return 0;
     } else {
